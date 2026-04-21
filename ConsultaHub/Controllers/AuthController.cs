@@ -1,4 +1,5 @@
 ﻿using ConsultaHub.Models.Entities;
+using ConsultaHub.Services.Auth;
 using ConsultaHub.View.DTOs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -11,57 +12,33 @@ namespace ConsultaHub.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController(IConfiguration configuration) : ControllerBase
+    public class AuthController(IAuthService authService) : ControllerBase
     {
         public static User user { get; set; } = new();
 
         [HttpPost("register")]
-        public ActionResult<User> Register(UserDto request)
+        public async Task<ActionResult<User>> Register(UserDto request)
         {
-            var hassedPassword = new PasswordHasher<User>()
-                .HashPassword(user, request.Password);
-
-            user.Username = request.Username;
-            user.PasswordHash = hassedPassword;
-
+            var user = await authService.RegisterAsync(request);
+            if (user == null)
+            {
+                return BadRequest("Usuário já existe.");
+            }
             return Ok(user);
         }
 
         [HttpPost("login")]
-        public ActionResult<string> Login(UserDto request)
+        public async Task<ActionResult<string>> Login(UserDto request)
         {
-            if (user.Username != request.Username)
-                return BadRequest("Usuário não encontrado.");
-            var result = new PasswordHasher<User>()
-                .VerifyHashedPassword(user, user.PasswordHash, request.Password);
-            if (result == PasswordVerificationResult.Failed)
-                return BadRequest("Senha incorreta.");
-
-            string token = CreateToken(user);
-            return Ok(token);
-        }
-
-        private string CreateToken(User user)
-        {
-            var claims = new List<Claim>
+            var token = await authService.LoginAsync(request);
+            if (token == null) 
             {
-                new Claim(ClaimTypes.Name, user.Username)
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetValue<string>("AppSettings:Token")!));
-
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-
-            var tokenDescriptor = new JwtSecurityToken(
-                issuer: configuration.GetValue<string>("AppSettings:Issuer"),
-                audience: configuration.GetValue<string>("AppSettings:Audience"),
-                claims: claims,
-                expires: DateTime.UtcNow.AddDays(1),
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
+                return BadRequest("Usuário ou senha incorretos.");
+            }
+            return Ok(token);
 
         }
+
+
     }
 }

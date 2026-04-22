@@ -1,6 +1,7 @@
 ﻿using ConsultaHub.Models.Entities;
 using ConsultaHub.Services.Auth;
 using ConsultaHub.View.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -31,7 +32,7 @@ namespace ConsultaHub.Controllers
         public async Task<ActionResult<string>> Login(UserDto request)
         {
             var token = await authService.LoginAsync(request);
-            if (token == null) 
+            if (token == null)
             {
                 return BadRequest("Usuário ou senha incorretos.");
             }
@@ -39,6 +40,18 @@ namespace ConsultaHub.Controllers
 
         }
 
+        [Authorize]
+        [HttpGet("validate")]
+        public async Task<ActionResult> ValidateAuthentication()
+        {
+            return Ok("Você foi autenticado!");
+        }
 
+        [Authorize(Roles = "Admin")]
+        [HttpGet("AdminValidate")]
+        public async Task<ActionResult> AdminValidate()
+        {
+            return Ok("Você foi autenticado como admin!");
+        }
     }
 }

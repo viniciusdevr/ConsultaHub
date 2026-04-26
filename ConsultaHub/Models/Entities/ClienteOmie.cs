@@ -1,8 +1,7 @@
 ﻿namespace ConsultaHub.Models.Entities
 {
-    public class Cliente
+    public class ClienteOmie
     {
-        public int Id { get; set; }
         public string cnpj_cpf { get; set; } = string.Empty;
         public long codigo_cliente { get; set; }
         public string codigo_cliente_integracao { get; set; } = string.Empty;

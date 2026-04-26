@@ -1,4 +1,4 @@
-﻿namespace ConsultaHub.Models
+﻿namespace ConsultaHub.Models.Entities
 {
     public class ClienteDetalhado
     {
